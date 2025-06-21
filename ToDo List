@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Siddharth's To-Do List</title>
+  <style>
+    :root {
+      --primary-color: #2563eb;
+      --accent-color: #60a5fa;
+      --background: #f0f9ff;
+      --card-bg: #ffffff;
+      --text-color: #1e293b;
+      --border-color: #cbd5e1;
+      --danger: #ef4444;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: var(--background);
+      color: var(--text-color);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem;
+      margin: 0;
+      min-height: 100vh;
+    }
+
+    h1 {
+      color: var(--primary-color);
+      margin-bottom: 1.5rem;
+      font-size: 2rem;
+    }
+
+    .todo-app {
+      background: var(--card-bg);
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 550px;
+    }
+
+    .todo-app input[type="text"],
+    .todo-app input[type="date"],
+    .todo-app input[type="time"] {
+      width: 100%;
+      padding: 0.8rem;
+      font-size: 1rem;
+      margin-bottom: 1rem;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      transition: border-color 0.3s;
+    }
+
+    .todo-app input:focus {
+      outline: none;
+      border-color: var(--primary-color);
+    }
+
+    .todo-app button {
+      width: 100%;
+      background: var(--primary-color);
+      color: white;
+      padding: 0.8rem;
+      font-size: 1rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .todo-app button:hover {
+      background: #1d4ed8;
+    }
+
+    ul#taskList {
+      list-style: none;
+      padding: 0;
+      margin-top: 1.5rem;
+    }
+
+    li.task {
+      background: #e0f2fe;
+      margin-bottom: 12px;
+      padding: 0.8rem 1rem;
+      border-left: 6px solid var(--primary-color);
+      border-radius: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+    }
+
+    li.task.completed span.task-text {
+      text-decoration: line-through;
+      opacity: 0.6;
+    }
+
+    .task span.task-text {
+      flex-grow: 1;
+      margin-right: 0.5rem;
+      cursor: pointer;
+      word-break: break-word;
+    }
+
+    .task .deadline {
+      font-size: 0.85rem;
+      color: #475569;
+      margin-top: 4px;
+    }
+
+    .task button {
+      flex-shrink: 0;
+      width: 36px;
+      height: 36px;
+      background: var(--danger);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .task button:hover {
+      background: #dc2626;
+    }
+
+    @media (max-width: 600px) {
+      .todo-app {
+        padding: 1.2rem;
+      }
+
+      h1 {
+        font-size: 1.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <h1>📝 Siddharth's To-Do List</h1>
+
+  <div class="todo-app">
+    <input type="text" id="taskInput" placeholder="Add a new task..." />
+    <input type="date" id="deadlineDate" />
+    <input type="time" id="deadlineTime" />
+    <button onclick="addTask()">➕ Add Task</button>
+
+    <ul id="taskList"></ul>
+  </div>
+
+  <script>
+    let tasks = JSON.parse(localStorage.getItem("siddharthTasks")) || [];
+
+    function saveTasks() {
+      localStorage.setItem("siddharthTasks", JSON.stringify(tasks));
+    }
+
+    function renderTasks() {
+      const list = document.getElementById("taskList");
+      list.innerHTML = "";
+      tasks.forEach((task, index) => {
+        const li = document.createElement("li");
+        li.className = "task" + (task.done ? " completed" : "");
+        let deadlineText = "";
+        if (task.deadlineDate) {
+          deadlineText += `📅 ${task.deadlineDate}`;
+        }
+        if (task.deadlineTime) {
+          deadlineText += ` 🕒 ${task.deadlineTime}`;
+        }
+        li.innerHTML = `
+          <div style="flex-grow: 1; min-width: 0;">
+            <span class="task-text" onclick="toggleComplete(${index})">${task.text}</span>
+            ${deadlineText ? `<div class="deadline">${deadlineText}</div>` : ""}
+          </div>
+          <button onclick="deleteTask(${index})">🗑️</button>
+        `;
+        list.appendChild(li);
+      });
+    }
+
+    function addTask() {
+      const taskInput = document.getElementById("taskInput");
+      const deadlineDateInput = document.getElementById("deadlineDate");
+      const deadlineTimeInput = document.getElementById("deadlineTime");
+
+      const text = taskInput.value.trim();
+      const deadlineDate = deadlineDateInput.value;
+      const deadlineTime = deadlineTimeInput.value;
+
+      if (text === "") return;
+
+      tasks.push({ text, deadlineDate, deadlineTime, done: false });
+      taskInput.value = "";
+      deadlineDateInput.value = "";
+      deadlineTimeInput.value = "";
+      saveTasks();
+      renderTasks();
+    }
+
+    function deleteTask(index) {
+      tasks.splice(index, 1);
+      saveTasks();
+      renderTasks();
+    }
+
+    function toggleComplete(index) {
+      tasks[index].done = !tasks[index].done;
+      saveTasks();
+      renderTasks();
+    }
+
+    renderTasks();
+  </script>
+
+</body>
+</html>
